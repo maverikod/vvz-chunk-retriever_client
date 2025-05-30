@@ -1,0 +1,462 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "SVO Semantic Chunker",
+    "description": "Semantic chunking microservice based on SVO\n\n## Available commands:\nconfig, health, help, chunk\n\n## Getting help\n\nWithout parameters (list of all commands):\n```json\n{\"jsonrpc\": \"2.0\", \"method\": \"help\", \"id\": 1}\n```\n\nWith parameters (information about a specific command):\n```json\n{\"jsonrpc\": \"2.0\", \"method\": \"help\", \"params\": {\"command\": \"config\"}, \"id\": 1}\n```\n",
+    "version": "0.1.1"
+  },
+  "paths": {
+    "/cmd": {
+      "post": {
+        "summary": "Execute Command",
+        "description": "Executes a command via JSON-RPC protocol.",
+        "operationId": "execute_command",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/CommandRequest"
+                  },
+                  {
+                    "$ref": "#/components/schemas/JsonRpcRequest"
+                  }
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CommandResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/JsonRpcResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Проверить работоспособность сервиса",
+        "description": "Возвращает информацию о состоянии сервиса",
+        "operationId": "health_check",
+        "responses": {
+          "200": {
+            "description": "Информация о состоянии сервиса",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.json": {
+      "get": {
+        "summary": "Get Openapi Schema",
+        "description": "Returns OpenAPI schema.",
+        "operationId": "get_openapi_schema_openapi_json_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/commands": {
+      "get": {
+        "summary": "Get Commands",
+        "description": "Returns list of available commands with their descriptions.",
+        "operationId": "get_commands_api_commands_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CommandRequest": {
+        "title": "CommandRequest",
+        "description": "Запрос на выполнение команды",
+        "type": "object",
+        "required": [
+          "command"
+        ],
+        "properties": {
+          "command": {
+            "title": "Command",
+            "description": "Команда для выполнения",
+            "type": "string",
+            "enum": [
+              "config",
+              "health",
+              "help",
+              "chunk"
+            ]
+          },
+          "params": {
+            "title": "Parameters",
+            "description": "Параметры команды, зависят от типа команды",
+            "type": "object",
+            "additionalProperties": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ConfigParams"
+              },
+              {
+                "$ref": "#/components/schemas/HealthParams"
+              },
+              {
+                "$ref": "#/components/schemas/HelpParams"
+              },
+              {
+                "$ref": "#/components/schemas/ChunkParams"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "CommandResponse": {
+        "title": "CommandResponse",
+        "description": "Ответ на выполнение команды",
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "properties": {
+          "result": {
+            "title": "Result",
+            "description": "Результат выполнения команды"
+          }
+        }
+      },
+      "JsonRpcRequest": {
+        "properties": {
+          "jsonrpc": {
+            "type": "string",
+            "title": "Jsonrpc",
+            "description": "JSON-RPC version",
+            "default": "2.0"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method",
+            "description": "Method name to call"
+          },
+          "params": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Params",
+            "description": "Method parameters",
+            "default": {}
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Request identifier"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method"
+        ],
+        "title": "JsonRpcRequest",
+        "description": "Base model for JSON-RPC requests."
+      },
+      "JsonRpcResponse": {
+        "properties": {
+          "jsonrpc": {
+            "type": "string",
+            "title": "Jsonrpc",
+            "description": "JSON-RPC version",
+            "default": "2.0"
+          },
+          "result": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result",
+            "description": "Method execution result"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error",
+            "description": "Error information"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id",
+            "description": "Request identifier"
+          }
+        },
+        "type": "object",
+        "title": "JsonRpcResponse",
+        "description": "Base model for JSON-RPC responses."
+      },
+      "HealthResponse": {
+        "title": "HealthResponse",
+        "description": "Информация о состоянии сервиса",
+        "type": "object",
+        "required": [
+          "status",
+          "model",
+          "version"
+        ],
+        "properties": {
+          "status": {
+            "title": "Status",
+            "description": "Статус сервиса (ok/error)",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "description": "Текущая активная модель",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "description": "Версия сервиса",
+            "type": "string"
+          }
+        }
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "ToolDescription": {
+        "type": "object",
+        "title": "Tool Description",
+        "description": "Description of the microservice tool",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the tool"
+          },
+          "description": {
+            "type": "string",
+            "description": "Tool for executing microservice commands.\n\n## Available commands:\nconfig, health, help, chunk\n\n## Getting help:\n- Without parameters (list of all commands): \n  {\"jsonrpc\": \"2.0\", \"method\": \"help\", \"id\": 1}\n  \n- With parameters (information about a specific command): \n  {\"jsonrpc\": \"2.0\", \"method\": \"help\", \"params\": {\"command\": \"command_name\"}, \"id\": 1}\n"
+          },
+          "version": {
+            "type": "string",
+            "description": "Tool version"
+          },
+          "help_examples": {
+            "type": "object",
+            "description": "Examples of using the help command",
+            "properties": {
+              "without_params": {
+                "type": "object",
+                "description": "Get a list of all commands"
+              },
+              "with_params": {
+                "type": "object",
+                "description": "Get information about a specific command"
+              }
+            },
+            "example": {
+              "without_params": {
+                "jsonrpc": "2.0",
+                "method": "help",
+                "id": 1
+              },
+              "with_params": {
+                "jsonrpc": "2.0",
+                "method": "help",
+                "params": {
+                  "command": "config"
+                },
+                "id": 1
+              }
+            }
+          },
+          "available_commands": {
+            "type": "array",
+            "description": "List of available commands",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "config",
+              "health",
+              "help",
+              "chunk"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ]
+      },
+      "ConfigParams": {
+        "type": "object",
+        "properties": {
+          "operation": {
+            "type": "string",
+            "enum": [
+              "get",
+              "set"
+            ],
+            "default": "get",
+            "description": "Operation to perform (get or set)"
+          },
+          "path": {
+            "type": "string",
+            "description": "Configuration path in dot notation (e.g. 'server.host')"
+          },
+          "value": {
+            "description": "Value to set (required for 'set' operation)"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "additionalProperties": false,
+        "title": "Parameters for config",
+        "description": "Parameters for the config command"
+      },
+      "HealthParams": {
+        "type": "object",
+        "additionalProperties": false,
+        "description": "Parameters for the health command",
+        "title": "Parameters for health"
+      },
+      "HelpParams": {
+        "type": "object",
+        "properties": {
+          "cmdname": {
+            "type": "string",
+            "description": "Name of command to get information about"
+          }
+        },
+        "additionalProperties": false,
+        "title": "Parameters for help",
+        "description": "Parameters for the help command"
+      },
+      "ChunkParams": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "title": "Parameters for chunk",
+        "description": "Parameters for the chunk command"
+      }
+    }
+  }
+}

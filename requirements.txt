@@ -1,0 +1,17 @@
+aiohappyeyeballs==2.6.1
+aiohttp==3.12.4
+aiosignal==1.3.2
+annotated-types==0.7.0
+attrs==25.3.0
+chunk_metadata_adapter==1.3.3
+frozenlist==1.6.0
+idna==3.10
+multidict==6.4.4
+propcache==0.3.1
+pydantic==2.11.5
+pydantic_core==2.33.2
+svo-client==0.1.0
+typing-inspection==0.4.1
+typing_extensions==4.13.2
+vector_store_client==1.0.0
+yarl==1.20.0

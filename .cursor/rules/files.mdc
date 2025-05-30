@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Структура проекта Chunk Retriever client
+
+- **README.md** — описание сервиса.
+- **.gitignore** — игнорируемые файлы. 

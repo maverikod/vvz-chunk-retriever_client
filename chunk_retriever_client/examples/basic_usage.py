@@ -1,14 +1,3 @@
-# chunk_retriever_client
-
-Asynchronous Python client for the Chunk Retriever microservice.
-
-## Installation
-```bash
-pip install chunk_retriever_client
-```
-
-## Usage Example
-```python
 import asyncio
 from chunk_retriever_client.client import ChunkRetrieverClient
 
@@ -19,8 +8,5 @@ async def main():
     print("Response:", response)
     print("Error:", errstr)
 
-asyncio.run(main())
-```
-
-## License
-MIT
+if __name__ == "__main__":
+    asyncio.run(main()) 
