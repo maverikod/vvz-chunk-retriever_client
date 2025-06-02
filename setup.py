@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="chunk_retriever_client",
-    version="0.1.0",
+    version="0.2.0",
     description="Asynchronous client for Chunk Retriever microservice.",
     author="Your Name",
     author_email="your@email.com",
