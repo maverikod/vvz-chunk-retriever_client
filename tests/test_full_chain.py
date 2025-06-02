@@ -1,6 +1,6 @@
 import pytest
 import uuid
-from chunk_metadata_adapter import ChunkMetadataBuilder, ChunkType
+from chunk_metadata_adapter import ChunkMetadataBuilder, ChunkType, FlatSemanticChunk
 from vector_store_client import create_client as create_vector_client
 from chunk_retriever_client.client import ChunkRetrieverClient
 from svo_client.chunker_client import ChunkerClient
@@ -27,13 +27,27 @@ async def test_full_chain():
             type=ChunkType.CODE_BLOCK,
             language="python"
         )
+        flat["start"] = 0
+        flat["end"] = len(ch.text)
+        # Use validate_and_fill for strict validation and autofill
+        obj, err = FlatSemanticChunk.validate_and_fill(flat)
+        if err:
+            raise AssertionError(f"Invalid metadata for chunk {i}: {err}")
+        flat = obj.model_dump()
+        # Remove all keys with value None
+        flat = {k: v for k, v in flat.items() if v is not None}
         flat_chunks.append(flat)
 
     # 4. Write chunks to both vector stores
     for db_url in ["http://localhost:3007", "http://localhost:8007"]:
         vclient = await create_vector_client(base_url=db_url)
         for flat in flat_chunks:
-            await vclient.create_text_record(text=flat["text"], metadata=flat)
+            try:
+                await vclient.create_text_record(text=flat["text"], metadata=flat)
+            except Exception as e:
+                import pprint
+                pprint.pprint(flat)
+                raise AssertionError(f"Vector store error on {db_url}: {e}")
         await vclient._client.aclose()
 
     # 5. Query retriever
@@ -41,6 +55,10 @@ async def test_full_chain():
         url="http://localhost", port=8010, source_id=source_id
     )
     assert err == "" or response is not None
+    # Validate all returned chunks
+    if response and "chunks" in response:
+        for chunk in response["chunks"]:
+            FlatSemanticChunk(**chunk)
     # 6. Check that returned chunks match what was written
     returned_texts = {c["text"] for c in response["chunks"]}
     original_texts = {flat["text"] for flat in flat_chunks}

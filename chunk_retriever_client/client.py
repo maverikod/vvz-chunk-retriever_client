@@ -6,6 +6,7 @@ import aiohttp
 import asyncio
 import uuid
 import re
+from chunk_metadata_adapter import FlatSemanticChunk
 
 class ChunkRetrieverClient:
     """
@@ -63,7 +64,15 @@ class ChunkRetrieverClient:
                         return None, f"Invalid JSON response: {e}"
                     if "error" in data:
                         return None, data["error"].get("message", str(data["error"]))
-                    return data.get("result"), ""
+                    # Validate metadata in response (if present)
+                    result = data.get("result")
+                    if result and "chunks" in result:
+                        try:
+                            for chunk in result["chunks"]:
+                                FlatSemanticChunk(**chunk)
+                        except Exception as e:
+                            return None, f"Invalid chunk metadata in response: {e}"
+                    return result, ""
         except asyncio.TimeoutError:
             return None, "Request timed out"
         except aiohttp.ClientError as e:
